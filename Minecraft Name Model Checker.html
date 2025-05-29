@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Minecraft Model Checker</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2em; }
+    input, button { padding: 0.5em; margin: 0.5em; font-size: 1em; }
+    .result { font-weight: bold; margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h1>Minecraft Model Checker</h1>
+  <input type="text" id="username" placeholder="Enter Minecraft name" />
+  <button onclick="checkModel()">Check Model</button>
+  <div class="result" id="result"></div>
+  <div id="suggestionArea" style="margin-top:1em;"></div>
+
+  <script>
+    function hashCode(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return hash;
+    }
+
+    function isSteve(name) {
+      return (hashCode(name) & 1) === 0;
+    }
+
+    let currentPool = [];
+    let shownSuggestions = [];
+
+    function checkModel() {
+      const name = document.getElementById("username").value.trim();
+      if (!name) return;
+
+      const steve = isSteve(name);
+      const model = steve ? "Steve" : "Alex";
+      document.getElementById("result").innerText = `Result: ${model} model`;
+
+      const buttonLabel = steve ? "Wanna get Alex?" : "Wanna get Steve?";
+      const targetModel = steve ? "Alex" : "Steve";
+
+      document.getElementById("suggestionArea").innerHTML = `
+        <button onclick="prepareSuggestionPool('${name}', '${targetModel}')">${buttonLabel}</button>
+        <div id="suggestions"></div>
+      `;
+    }
+
+    function prepareSuggestionPool(originalName, desiredModel) {
+      const wantSteve = desiredModel === "Steve";
+      const pool = new Set();
+      const tried = new Set();
+
+      const templates = [
+        n => "iitz" + n,
+        n => "itz" + n,
+        n => "xX" + n + "Xx",
+        n => "Xx_" + n + "_xX",
+        n => n + "YT",
+        n => "YT_" + n,
+        n => n + "MC",
+        n => "Mr" + n,
+        n => "The" + n,
+        n => n + "OP",
+        n => n + "TV",
+        n => "real" + n,
+        n => n + "LOL",
+        n => n + "Plays",
+        n => n + "Dev",
+        n => "hey" + n,
+        n => "OG" + n,
+        n => n + "_main",
+        n => n + "zz",
+        n => "legend" + n,
+        n => "king" + n,
+        n => "noob" + n,
+        n => "Pro" + n,
+        n => "ghost" + n,
+        n => "aim" + n,
+        n => "alpha" + n,
+        n => "dark" + n,
+        n => "quick" + n,
+        n => n + "x",
+        n => n + "sama",
+        n => "Ultra" + n,
+        n => "1" + n,
+        n => n + "1",
+        n => n + "007",
+        n => n + "999",
+        n => n + "z",
+        n => n + "Q",
+        n => "Z" + n,
+        n => "TTV_" + n,
+        n => "0" + n,
+        n => n + "_lol",
+        n => n + "god",
+        n => n + "X",
+        n => n + "EX",
+        n => "PvP" + n,
+        n => n + "_x",
+        n => n.split('').reverse().join(''),
+        n => n.charAt(0).toUpperCase() + n.slice(1),
+        n => n + "_" + Math.floor(Math.random() * 100),
+        n => n + String.fromCharCode(65 + Math.floor(Math.random() * 26)),
+        n => "x" + n + "x"
+      ];
+
+      for (let t of templates) {
+        const variation = t(originalName);
+        if (!tried.has(variation) && isSteve(variation) === wantSteve) {
+          pool.add(variation);
+          tried.add(variation);
+        }
+        if (pool.size >= 50) break;
+      }
+
+      currentPool = [...pool];
+      shownSuggestions = [];
+      showRandomSuggestions(desiredModel);
+    }
+
+    function showRandomSuggestions(desiredModel) {
+      if (currentPool.length === 0) {
+        document.getElementById("suggestions").innerHTML = `<p>No suggestions found.</p>`;
+        return;
+      }
+
+      const available = currentPool.filter(name => !shownSuggestions.includes(name));
+      const suggestions = [];
+
+      while (suggestions.length < 5 && available.length > 0) {
+        const index = Math.floor(Math.random() * available.length);
+        suggestions.push(available.splice(index, 1)[0]);
+      }
+
+      shownSuggestions.push(...suggestions);
+
+      const resultHTML = suggestions.length
+        ? `<p>Try these to get <strong>${desiredModel}</strong> model:</p><ul>${suggestions.map(name => `<li>${name}</li>`).join('')}</ul>
+           <button onclick="showRandomSuggestions('${desiredModel}')">Random more</button>`
+        : `<p>No more unique suggestions available.</p>`;
+
+      document.getElementById("suggestions").innerHTML = resultHTML;
+    }
+  </script>
+</body>
+</html>
